@@ -470,7 +470,7 @@ document.getElementById('btn-share').onclick = async () => {
   resultModal.style.display = 'none';
 
   const bg = await loadImage('image/share.jpg');
-  const qr = await loadImage('image/qrcode.jpg');
+  const qr = await loadImage('image/qrcode.png');
   const canvas = document.getElementById('shareCanvas');
   canvas.width = 300;
   canvas.height = 450;
@@ -543,3 +543,4 @@ function restart(){
 </script>
 </body>
 </html>
+
