@@ -472,6 +472,8 @@ document.getElementById('btn-share').onclick = async () => {
   const bg = await loadImage('image/share.jpg');
   const qr = await loadImage('image/qrcode.jpg');
   const canvas = document.getElementById('shareCanvas');
+  canvas.width = 300;
+  canvas.height = 450;
   const ctx = canvas.getContext('2d');
 
   // 背景
@@ -479,15 +481,15 @@ document.getElementById('btn-share').onclick = async () => {
   ctx.fillStyle='#fff';
   ctx.font='24px "微软雅黑"';
   ctx.textAlign='center';
-  ctx.fillText('我为网络升温1°', canvas.width/2, 240);
+  ctx.fillText('我为网络升温1°', canvas.width/2, 200);
   ctx.fillStyle='#ffdb4d';
-  ctx.font='bold 32px "微软雅黑"';
-  ctx.fillText(`我的网络温度：${Math.round(temp)}°`, canvas.width/2, 300);
-  const qrSize=120;
-  ctx.drawImage(qr, canvas.width/2-qrSize/2 - 100, canvas.height-qrSize-15, qrSize, qrSize);
+  ctx.font='bold 30px "微软雅黑"';
+  ctx.fillText(`我的网络温度：${Math.round(temp)}°`, canvas.width/2, 260);
+  const qrSize=80;
+  ctx.drawImage(qr, canvas.width/2-qrSize/2 - 85, canvas.height-qrSize-15, qrSize, qrSize);
   ctx.fillStyle='#999999';
   ctx.font='16px "微软雅黑"';
-  ctx.fillText('扫码测测你的网络温度', canvas.width/2+80, canvas.height-20);
+  ctx.fillText('扫码测测你的网络温度', canvas.width/2+55, canvas.height-15);
 
   //document.getElementById('share-preview').style.display='flex';
 
