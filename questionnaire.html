@@ -11,7 +11,7 @@ html, body {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "微软雅黑", sans-serif;
 }
 
 /* 加载页 */
@@ -27,15 +27,21 @@ html, body {
   pointer-events: none;
 }
 
-/* 问卷主体 */
+/* 主体 */
 #questionnaire {
   display: none;
-  background: url('image/background.jpg') center center / cover no-repeat;
+  background: url('image/bg.jpg') center center / cover no-repeat;
+  background-size: cover;
   height: 100%;
   color: #fff;
   text-align: center;
   position: relative;
-  overflow: hidden;
+}
+
+/* 动画淡入 */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* 气泡动画容器 */
@@ -50,19 +56,31 @@ html, body {
   z-index: 0;
 }
 
+.bubble {
+  position: absolute;
+  bottom: -50px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+  animation: rise linear infinite;
+}
+@keyframes rise { 
+  0% { transform: translateY(0); opacity: 0.8; }
+  100% { transform: translateY(-120%); opacity: 0; }
+}
+
 /* 问题卡片 */
 .question {
   display: none;
   position: absolute;
   width: 80%;
-  left: 50%;
-  top: 20%;
-  transform: translateX(-50%);
+  left: 10%;
+  top: 25%;
   padding: 20px;
   background: rgba(255,255,255,0.15);
   border-radius: 15px;
   backdrop-filter: blur(10px);
-  animation: fadeIn 0.6s;
+  animation: fadeInUp 0.6s ease;
   z-index: 1;
 }
 .question.active { display: block; }
@@ -89,8 +107,8 @@ html, body {
 /* 返回按钮 */
 .btn-back {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: -15px;
+  left: -15px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -121,92 +139,105 @@ html, body {
   position: absolute;
   bottom: 0;
   width: 100%;
-  background: linear-gradient(to top, red, orange);
+  background: linear-gradient(to top, #00bfff, #ff0000);
   height: 30%;
-  transition: height 0.6s ease;
+  transition: height 0.8s ease;
 }
 
-#questionnaire, #result, #share {
-  height: 100%;
-  width: 100%;
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-}
-
-/* 结果页 */
-#result {
+/* 弹窗结果 */
+#result-modal {
   display: none;
-  background: url('image/background.jpg') center center / cover no-repeat;
-  color: #fff;
-  text-align: center;
-  height: 100%;
-  position: relative;
-  animation: fadeIn 0.6s;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(5px);
+  z-index: 20;
+  justify-content: center;
+  align-items: center;
 }
-#result h2 { margin-top: 40%; font-size: 22px; }
-#temp-value { font-size: 36px; color: #ffdb4d; margin-top: 10px; }
-#result button {
-  display: block;
-  width: 70%;
-  margin: 20px auto;
-  padding: 12px;
+.modal-content {
   background: rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 30px;
+  width: 80%;
+  max-width: 320px;
   color: #fff;
-  border: 1px solid #fff;
-  border-radius: 25px;
-  font-size: 16px;
-}
-
-/* 分享页 */
-#share {
-  display: none;
-  background: #fff;
   text-align: center;
-  height: 100%;
-  padding-top: 30%;
-  opacity: 0;
-  transition: opacity 0.6s;
+  animation: fadeInUp 0.6s;
 }
-#share.visible { opacity: 1; }
-#share h3 { color: #333; font-size: 22px; }
-#share img { margin-top: 20px; width: 100px; height: auto; }
-#share .btns button {
-  display: block;
-  width: 70%;
-  margin: 15px auto;
+#temp-value {
+  font-size: 38px;
+  margin: 10px 0;
+  color: #ffdb4d;
+}
+.modal-content button {
+  width: 80%;
+  margin: 10px auto;
   padding: 12px;
-  border-radius: 25px;
   border: none;
-  color: white;
+  border-radius: 25px;
   font-size: 16px;
+  color: #fff;
+  cursor: pointer;
 }
 .btn-generate { background: #ff6666; }
 .btn-retry { background: #66b3ff; }
 
-/* 动画 */
-@keyframes fadeIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0);} }
-.bubble {
-  position: absolute;
-  bottom: -50px;
-  font-size: 24px;
-  opacity: 0.8;
-  animation: rise linear forwards;
+/* 分享页 */
+#share {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: url('image/background.jpg') center/cover no-repeat;
+  text-align: center;
+  color: #fff;
+  z-index: 25;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  animation: fadeInUp 0.8s ease;
 }
-@keyframes rise { 0% { transform: translateY(0); opacity:0.8; } 100% { transform: translateY(-120%); opacity:0; } }
-
+#share .card {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 30px 20px;
+  width: 80%;
+  max-width: 340px;
+}
+#share h3 {
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+#share p {
+  font-size: 18px;
+  margin: 10px 0 20px;
+}
+#share img {
+  width: 100px;
+  height: auto;
+  margin: 10px;
+  object-fit: contain;
+  background: transparent;
+}
+#share button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  border-radius: 25px;
+  border: none;
+  color: white;
+  background: #66b3ff;
+  font-size: 16px;
+  cursor: pointer;
+}
 </style>
 </head>
 <body>
-<!-- 加载页 -->
 <div id="loading"></div>
 
-<!-- 问卷页 -->
 <div id="questionnaire">
   <div id="bubbles"></div>
-  <div class="thermo-container">
-    <div class="thermo-fill" id="thermo-fill"></div>
-  </div>
+  <div class="thermo-container"><div class="thermo-fill" id="thermo-fill"></div></div>
 
   <!-- 问题1 -->
   <div class="question active" data-change="10">
@@ -242,85 +273,82 @@ html, body {
   </div>
 </div>
 
-<!-- 结果页 -->
-<div id="result">
-  <h2>你的网络温度是</h2>
-  <div id="temp-value">0°</div>
-  <p>—— 暖心网民 ❤️ ——</p>
-  <button id="btn-share" class="btn-generate">生成分享图</button>
-  <button id="btn-retry" class="btn-retry">再次测量</button>
-</div>
-
-<!-- 分享页 -->
-<div id="share">
-  <h3>我为网络升温1°</h3>
-  <img src="image/logo.jpg" alt="公益LOGO">
-  <div><img src="image/qrcode.jpg" alt="二维码"></div>
-  <div class="btns">
+<!-- 结果弹窗 -->
+<div id="result-modal">
+  <div class="modal-content">
+    <h2>你的网络温度是</h2>
+    <div id="temp-value">0°</div>
+    <p>—— 暖心网民 ❤️ ——</p>
+    <button class="btn-generate" id="btn-share">生成分享图</button>
     <button class="btn-retry" onclick="restart()">再次测量</button>
   </div>
 </div>
 
+<!-- 分享图 -->
+<div id="share">
+  <div class="card">
+    <h3>我为网络升温1°</h3>
+    <p id="final-temp-text">我的网络温度为 0°</p>
+    <img src="image/logo.jpg" alt="logo">
+    <img src="image/qrcode.jpg" alt="二维码">
+    <button onclick="restart()">再次测量</button>
+  </div>
+</div>
+
 <script>
-// 基础变量
-const loading = document.getElementById('loading');
-const questionnaire = document.getElementById('questionnaire');
-const thermo = document.getElementById('thermo-fill');
-const questions = document.querySelectorAll('.question');
-const result = document.getElementById('result');
-const tempValue = document.getElementById('temp-value');
-const share = document.getElementById('share');
-const bubblesContainer = document.getElementById('bubbles');
+const loading=document.getElementById('loading');
+const questionnaire=document.getElementById('questionnaire');
+const thermo=document.getElementById('thermo-fill');
+const questions=document.querySelectorAll('.question');
+const resultModal=document.getElementById('result-modal');
+const tempValue=document.getElementById('temp-value');
+const share=document.getElementById('share');
+const finalTempText=document.getElementById('final-temp-text');
+const bubblesContainer=document.getElementById('bubbles');
 
-let current = 0;
-let temp = 30;
-let tempHistory = [temp];
+let current=0,temp=30,tempHistory=[temp];
 
-// 页面加载
-window.addEventListener('load', () => {
-  setTimeout(() => {
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
     loading.classList.add('fade-out');
-    setTimeout(() => {
-      loading.style.display = 'none';
-      questionnaire.style.display = 'block';
+    setTimeout(()=>{
+      loading.style.display='none';
+      questionnaire.style.display='block';
       updateBackButton();
-    }, 800);
-  }, 1200);
+    },800);
+  },1200);
 });
 
 // 气泡动画
-function createBubble() {
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  const emojiArr = ['😊','😐','😠','❤️','👍'];
-  const emoji = emojiArr[Math.floor(Math.random()*emojiArr.length)];
-  bubble.textContent = emoji;
-  bubble.style.left = Math.random()*80 + '%';
-  bubble.style.fontSize = (Math.random()*20+20)+'px';
-  bubble.style.animationDuration = (Math.random()*4+4)+'s';
+function createBubble(){
+  const bubble=document.createElement('div');
+  bubble.className='bubble';
+  const emojiArr=['😊','😐','😠','❤️','👍'];
+  bubble.textContent=emojiArr[Math.floor(Math.random()*emojiArr.length)];
+  bubble.style.left=Math.random()*80+'%';
+  bubble.style.fontSize=(Math.random()*20+20)+'px';
+  bubble.style.animationDuration=(Math.random()*5+4)+'s';
   bubblesContainer.appendChild(bubble);
-  bubble.addEventListener('animationend', () => bubblesContainer.removeChild(bubble));
+  setTimeout(()=>bubblesContainer.removeChild(bubble),8000);
 }
-
 let bubbleInterval;
-function startBubbles() { bubbleInterval=setInterval(createBubble,400); }
-function stopBubbles() { if(bubbleInterval) clearInterval(bubbleInterval); }
+function startBubbles(){bubbleInterval=setInterval(createBubble,600);}
+function stopBubbles(){if(bubbleInterval) clearInterval(bubbleInterval);}
 
-// 选项点击
-document.querySelectorAll('.options button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const change = Number(btn.dataset.change);
-    temp = Math.min(100, Math.max(0, temp + change));
-    thermo.style.height = temp + '%';
+// 问题选择
+document.querySelectorAll('.options button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const change=Number(btn.dataset.change);
+    temp=Math.min(100,Math.max(0,temp+change));
+    thermo.style.height=temp+'%';
     tempHistory.push(temp);
 
     questions[current].classList.remove('active');
     current++;
-    if(current < questions.length) {
+    if(current<questions.length){
       questions[current].classList.add('active');
       updateBackButton();
-      if(current===1) startBubbles();
-      else stopBubbles();
+      if(current===1) startBubbles(); else stopBubbles();
     } else {
       stopBubbles();
       showResult();
@@ -328,62 +356,57 @@ document.querySelectorAll('.options button').forEach(btn => {
   });
 });
 
-// 返回上一题
-function goBack() {
-  if(current===0) return;
+function goBack(){
+  if(current===0)return;
   questions[current].classList.remove('active');
   current--;
   questions[current].classList.add('active');
   tempHistory.pop();
-  temp = tempHistory[tempHistory.length-1] || 30;
-  thermo.style.height = temp + '%';
+  temp=tempHistory[tempHistory.length-1]||30;
+  thermo.style.height=temp+'%';
   updateBackButton();
-  if(current===1) startBubbles();
-  else stopBubbles();
+  if(current===1) startBubbles(); else stopBubbles();
 }
 
-// 更新返回按钮显示
-function updateBackButton() {
+function updateBackButton(){
   questions.forEach((q,i)=>{
-    const btn = q.querySelector('.btn-back');
-    if(btn) btn.style.display=(i>0 && i===current)?'block':'none';
+    const btn=q.querySelector('.btn-back');
+    if(btn) btn.style.display=(i>0&&i===current)?'block':'none';
   });
 }
 
-// 显示结果
-function showResult() {
-  questionnaire.style.display = 'none';
-  result.style.display = 'block';
-  let displayTemp = 0;
-  const finalTemp = Math.round(temp);
-  const timer = setInterval(()=>{
+// 显示结果弹窗
+function showResult(){
+  questionnaire.style.display='block';
+  resultModal.style.display='flex';
+  let displayTemp=0;
+  const finalTemp=Math.round(temp);
+  const timer=setInterval(()=>{
     if(displayTemp<finalTemp){
       displayTemp++;
-      tempValue.textContent = displayTemp+'°';
+      tempValue.textContent=displayTemp+'°';
     } else clearInterval(timer);
-  },25);
+  },30);
+  finalTempText.textContent=`我的网络温度为 ${finalTemp}°`;
 }
 
-// 分享页按钮
-document.getElementById('btn-share').onclick = () => {
-  result.style.display = 'none';
-  share.style.display = 'block';
-  setTimeout(()=> share.classList.add('visible'), 50);
+// 生成分享图
+document.getElementById('btn-share').onclick=()=>{
+  resultModal.style.display='none';
+  share.style.display='flex';
 }
 
-// 再次测量
-document.getElementById('btn-retry').onclick = restart;
-
-function restart() {
-  share.classList.remove('visible');
-  setTimeout(()=> share.style.display='none', 600);
-  result.style.display = 'none';
-  questionnaire.style.display = 'block';
-  current = 0;
-  temp = 30;
-  tempHistory = [temp];
-  thermo.style.height = temp + '%';
-  questions.forEach((q,i)=>q.classList.toggle('active', i===0));
+// 重启
+function restart(){
+  stopBubbles();
+  share.style.display='none';
+  resultModal.style.display='none';
+  questionnaire.style.display='block';
+  current=0;
+  temp=30;
+  tempHistory=[temp];
+  thermo.style.height=temp+'%';
+  questions.forEach((q,i)=>q.classList.toggle('active',i===0));
   updateBackButton();
 }
 </script>
