@@ -20,11 +20,56 @@ html, body {
   inset: 0;
   background: url('image/loading.jpg') center center / cover no-repeat;
   z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   transition: opacity 0.8s ease;
 }
 #loading.fade-out {
   opacity: 0;
   pointer-events: none;
+}
+
+.loading-overlay {
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.loading-text {
+  text-align: center;
+  color: #fff;
+  animation: fadeInUp 1s ease;
+}
+
+.loading-text h1 {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 25px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* 浅蓝色按钮风格 */
+#start-btn {
+  background: linear-gradient(135deg, #2a75ac, #66b3ff);
+  border: none;
+  border-radius: 25px;
+  padding: 12px 40px;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(102,179,255,0.4);
+  transition: all 0.3s ease;
+}
+#start-btn:hover {
+  background: linear-gradient(135deg, #89c9ff, #4fa3ff);
+  transform: scale(1.05);
 }
 
 /* 主体 */
@@ -139,7 +184,7 @@ html, body {
   bottom: 0;
   width: 100%;
   background: linear-gradient(to top, #00bfff, #ff0000);
-  height: 30%;
+  height: 50%;
   transition: height 0.8s ease;
 }
 
@@ -229,10 +274,43 @@ html, body {
   font-size: 16px;
   cursor: pointer;
 }
+
+/* 分享预览弹窗 */
+#share-preview {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(5px);
+  justify-content:center;
+  align-items:center;
+  z-index:30;
+  flex-direction:column;
+  color:#fff;
+}
+#share-preview button{
+  margin-top:12px;
+  border:none;
+  border-radius:25px;
+  padding:10px 25px;
+  font-size:16px;
+  cursor:pointer;
+}
+#downloadBtn{ background:#66b3ff; color:#fff; }
+#closePreview{ background:rgba(255,255,255,0.3); color:#fff; }
 </style>
 </head>
 <body>
-<div id="loading"></div>
+
+<!-- 加载页 -->
+<div id="loading">
+  <div class="loading-overlay">
+    <div class="loading-text">
+      <h1>你让网络升温几度？</h1>
+      <button id="start-btn">开始测量</button>
+    </div>
+  </div>
+</div>
 
 <div id="questionnaire">
   <div id="bubbles"></div>
@@ -243,9 +321,9 @@ html, body {
     <button class="btn-back" onclick="goBack()">←</button>
     <h2>看到有人被网络暴力时，你会？</h2>
     <div class="options">
-      <button data-change="-5">A：旁观</button>
-      <button data-change="10">B：举报</button>
-      <button data-change="8">C：留言安慰</button>
+      <button data-change="-10">A：旁观</button>
+      <button data-change="16.5">B：举报</button>
+      <button data-change="16.5">C：留言安慰</button>
     </div>
   </div>
 
@@ -254,9 +332,9 @@ html, body {
     <button class="btn-back" onclick="goBack()">←</button>
     <h2>你在评论区最常用的表情是？</h2>
     <div class="options">
-      <button data-change="5">😊 微笑</button>
-      <button data-change="2">😐 冷静</button>
-      <button data-change="-3">😠 生气</button>
+      <button data-change="16.5">😊 微笑</button>
+      <button data-change="8">😐 冷静</button>
+      <button data-change="-16.5">😠 生气</button>
     </div>
   </div>
 
@@ -265,9 +343,9 @@ html, body {
     <button class="btn-back" onclick="goBack()">←</button>
     <h2>如果看到不同意见，你会？</h2>
     <div class="options">
-      <button data-change="-5">A：争论</button>
-      <button data-change="8">B：理性回复</button>
-      <button data-change="3">C：离开</button>
+      <button data-change="-16.5">A：争论</button>
+      <button data-change="16.5">B：理性回复</button>
+      <button data-change="8">C：离开</button>
     </div>
   </div>
 </div>
@@ -283,15 +361,11 @@ html, body {
   </div>
 </div>
 
-<!-- 分享图 -->
-<div id="share">
-  <div class="card">
-    <h3>我为网络升温1°</h3>
-    <p id="final-temp-text">我的网络温度为 0°</p>
-    <img src="image/logo.jpg" alt="logo">
-    <img src="image/qrcode.jpg" alt="二维码">
-    <button onclick="restart()">再次测量</button>
-  </div>
+<!-- 分享预览弹窗 -->
+<div id="share-preview">
+  <canvas id="shareCanvas" width="400" height="600" style="border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.5);"></canvas>
+  <button id="downloadBtn">下载图片</button>
+  <button id="closePreview">关闭</button>
 </div>
 
 <script>
@@ -305,17 +379,19 @@ const share=document.getElementById('share');
 const finalTempText=document.getElementById('final-temp-text');
 const bubblesContainer=document.getElementById('bubbles');
 
-let current=0,temp=30,tempHistory=[temp];
+let current=0,temp=50,tempHistory=[temp];
 
+// 点击开始按钮进入问卷
 window.addEventListener('load',()=>{
-  setTimeout(()=>{
+  const startBtn = document.getElementById('start-btn');
+  startBtn.addEventListener('click',()=>{
     loading.classList.add('fade-out');
     setTimeout(()=>{
       loading.style.display='none';
       questionnaire.style.display='block';
       updateBackButton();
     },800);
-  },1200);
+  });
 });
 
 // 气泡动画
@@ -361,7 +437,7 @@ function goBack(){
   current--;
   questions[current].classList.add('active');
   tempHistory.pop();
-  temp=tempHistory[tempHistory.length-1]||30;
+  temp=tempHistory[tempHistory.length-1]||50;
   thermo.style.height=temp+'%';
   updateBackButton();
   if(current===1) startBubbles(); else stopBubbles();
@@ -389,11 +465,65 @@ function showResult(){
   finalTempText.textContent=`我的网络温度为 ${finalTemp}°`;
 }
 
-// 生成分享图
-document.getElementById('btn-share').onclick=()=>{
-  resultModal.style.display='none';
-  share.style.display='flex';
+// 生成分享图预览
+document.getElementById('btn-share').onclick = async () => {
+  resultModal.style.display = 'none';
+
+  const bg = await loadImage('image/share.jpg');
+  const qr = await loadImage('image/qrcode.jpg');
+  const canvas = document.getElementById('shareCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // 背景
+  ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+  ctx.fillStyle='#fff';
+  ctx.font='24px "微软雅黑"';
+  ctx.textAlign='center';
+  ctx.fillText('我为网络升温1°', canvas.width/2, 240);
+  ctx.fillStyle='#ffdb4d';
+  ctx.font='bold 32px "微软雅黑"';
+  ctx.fillText(`我的网络温度：${Math.round(temp)}°`, canvas.width/2, 300);
+  const qrSize=120;
+  ctx.drawImage(qr, canvas.width/2-qrSize/2 - 100, canvas.height-qrSize-15, qrSize, qrSize);
+  ctx.fillStyle='#999999';
+  ctx.font='16px "微软雅黑"';
+  ctx.fillText('扫码测测你的网络温度', canvas.width/2+80, canvas.height-20);
+
+  //document.getElementById('share-preview').style.display='flex';
+
+  const sharePreview = document.getElementById('share-preview');
+  sharePreview.style.opacity = '0';
+  sharePreview.style.display = 'flex';
+  
+  // 触发动画
+  setTimeout(() => {
+    sharePreview.style.transition = 'opacity 0.5s ease-in-out';
+    sharePreview.style.opacity = '1';
+  }, 10);
+};
+
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.crossOrigin="anonymous";
+    img.onload=()=>resolve(img);
+    img.onerror=reject;
+    img.src=src;
+  });
 }
+
+document.getElementById('downloadBtn').onclick=()=>{
+  const canvas=document.getElementById('shareCanvas');
+  const link=document.createElement('a');
+  link.download='我的网络温度分享图.jpg';
+  link.href=canvas.toDataURL('image/jpeg');
+  link.click();
+};
+
+document.getElementById('closePreview').onclick=()=>{
+  document.getElementById('share-preview').style.display='none';
+  resultModal.style.display='flex'; // 显示结果弹窗
+};
 
 // 重启
 function restart(){
@@ -402,7 +532,7 @@ function restart(){
   resultModal.style.display='none';
   questionnaire.style.display='block';
   current=0;
-  temp=30;
+  temp=50;
   tempHistory=[temp];
   thermo.style.height=temp+'%';
   questions.forEach((q,i)=>q.classList.toggle('active',i===0));
@@ -411,4 +541,3 @@ function restart(){
 </script>
 </body>
 </html>
-
