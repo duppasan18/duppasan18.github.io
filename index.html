@@ -462,7 +462,7 @@ function showResult(){
       tempValue.textContent=displayTemp+'°';
     } else clearInterval(timer);
   },30);
-  finalTempText.textContent=`我的网络温度为 ${finalTemp}°`;
+  //finalTempText.textContent=`我的网络温度为 ${finalTemp}°`;
 }
 
 // 生成分享图预览
@@ -470,7 +470,7 @@ document.getElementById('btn-share').onclick = async () => {
   resultModal.style.display = 'none';
 
   const bg = await loadImage('image/share.jpg');
-  const qr = await loadImage('image/qrcode.png');
+  const qr = await loadImage('image/qrcode.jpg');
   const canvas = document.getElementById('shareCanvas');
   canvas.width = 300;
   canvas.height = 450;
@@ -530,7 +530,7 @@ document.getElementById('closePreview').onclick=()=>{
 // 重启
 function restart(){
   stopBubbles();
-  share.style.display='none';
+  if (share) share.style.display='none';  // 添加检查
   resultModal.style.display='none';
   questionnaire.style.display='block';
   current=0;
@@ -543,4 +543,3 @@ function restart(){
 </script>
 </body>
 </html>
-
