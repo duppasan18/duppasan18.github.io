@@ -1,545 +1,284 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>网络升温问卷</title>
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  font-family: "微软雅黑", sans-serif;
-}
-
-/* 加载页 */
-#loading {
-  position: fixed;
-  inset: 0;
-  background: url('image/loading.jpg') center center / cover no-repeat;
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: opacity 0.8s ease;
-}
-#loading.fade-out {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.loading-overlay {
-  background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(4px);
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-}
-
-.loading-text {
-  text-align: center;
-  color: #fff;
-  animation: fadeInUp 1s ease;
-}
-
-.loading-text h1 {
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 25px;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.4);
-}
-
-/* 浅蓝色按钮风格 */
-#start-btn {
-  background: linear-gradient(135deg, #2a75ac, #66b3ff);
-  border: none;
-  border-radius: 25px;
-  padding: 12px 40px;
-  color: white;
-  font-size: 18px;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(102,179,255,0.4);
-  transition: all 0.3s ease;
-}
-#start-btn:hover {
-  background: linear-gradient(135deg, #89c9ff, #4fa3ff);
-  transform: scale(1.05);
-}
-
-/* 主体 */
-#questionnaire {
-  display: none;
-  background: url('image/background.jpg') center center / cover no-repeat;
-  background-size: cover;
-  height: 100%;
-  color: #fff;
-  text-align: center;
-  position: relative;
-}
-
-/* 动画淡入 */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* 气泡动画容器 */
-#bubbles {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 0;
-}
-
-.bubble {
-  position: absolute;
-  bottom: -50px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  opacity: 0.7;
-  animation: rise linear infinite;
-}
-@keyframes rise { 
-  0% { transform: translateY(0); opacity: 0.8; }
-  100% { transform: translateY(-120%); opacity: 0; }
-}
-
-/* 问题卡片 */
-.question {
-  display: none;
-  position: absolute;
-  width: 80%;
-  left: 10%;
-  top: 25%;
-  background: rgba(255,255,255,0.15);
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  animation: fadeInUp 0.6s ease;
-  z-index: 1;
-}
-.question.active { display: block; }
-.question h2 {
-  font-size: 20px;
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-.options button {
-  display: block;
-  width: 100%;
-  margin: 10px auto;
-  padding: 12px;
-  background: rgba(255,255,255,0.2);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.5);
-  border-radius: 25px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-.options button:hover { background: rgba(255,255,255,0.4); }
-
-/* 返回按钮 */
-.btn-back {
-  position: absolute;
-  top: -15px;
-  left: -15px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.3);
-  color: #fff;
-  font-size: 18px;
-  cursor: pointer;
-  z-index: 2;
-  display: none;
-  transition: background 0.3s;
-}
-.btn-back:hover { background: rgba(255,255,255,0.6); }
-
-/* 温度计 */
-.thermo-container {
-  position: absolute;
-  right: 20px;
-  bottom: 50px;
-  width: 20px;
-  height: 150px;
-  border: 2px solid #fff;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.2);
-  overflow: hidden;
-}
-.thermo-fill {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: linear-gradient(to top, #00bfff, #ff0000);
-  height: 50%;
-  transition: height 0.8s ease;
-}
-
-/* 弹窗结果 */
-#result-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(5px);
-  z-index: 20;
-  justify-content: center;
-  align-items: center;
-}
-.modal-content {
-  background: rgba(255,255,255,0.2);
-  border-radius: 20px;
-  padding: 30px;
-  width: 80%;
-  max-width: 320px;
-  color: #fff;
-  text-align: center;
-  animation: fadeInUp 0.6s;
-}
-#temp-value {
-  font-size: 38px;
-  margin: 10px 0;
-  color: #ffdb4d;
-}
-.modal-content button {
-  width: 80%;
-  margin: 10px auto;
-  padding: 12px;
-  border: none;
-  border-radius: 25px;
-  font-size: 16px;
-  color: #fff;
-  cursor: pointer;
-}
-.btn-generate { background: #ff6666; }
-.btn-retry { background: #66b3ff; }
-
-/* 分享页 */
-#share {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: url('image/background.jpg') center/cover no-repeat;
-  text-align: center;
-  color: #fff;
-  z-index: 25;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  animation: fadeInUp 0.8s ease;
-}
-#share .card {
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 30px 20px;
-  width: 80%;
-  max-width: 340px;
-}
-#share h3 {
-  font-size: 22px;
-  margin-bottom: 10px;
-}
-#share p {
-  font-size: 18px;
-  margin: 10px 0 20px;
-}
-#share img {
-  width: 100px;
-  height: auto;
-  margin: 10px;
-  object-fit: contain;
-  background: transparent;
-}
-#share button {
-  margin-top: 15px;
-  padding: 10px 20px;
-  border-radius: 25px;
-  border: none;
-  color: white;
-  background: #66b3ff;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-/* 分享预览弹窗 */
-#share-preview {
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.7);
-  backdrop-filter:blur(5px);
-  justify-content:center;
-  align-items:center;
-  z-index:30;
-  flex-direction:column;
-  color:#fff;
-}
-#share-preview button{
-  margin-top:12px;
-  border:none;
-  border-radius:25px;
-  padding:10px 25px;
-  font-size:16px;
-  cursor:pointer;
-}
-#downloadBtn{ background:#66b3ff; color:#fff; }
-#closePreview{ background:rgba(255,255,255,0.3); color:#fff; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>网络文明守护计划</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f9ff; }
+        .page { display: none; min-height: 100vh; flex-direction: column; }
+        .page.active { display: flex; }
+        .option-card { transition: all 0.2s; border: 2px solid transparent; }
+        .option-card:active { transform: scale(0.98); background-color: #e0f2fe; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* 隐藏滚动条但保留功能 */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+    </style>
 </head>
-<body>
+<body class="text-gray-800">
 
-<!-- 加载页 -->
-<div id="loading">
-  <div class="loading-overlay">
-    <div class="loading-text">
-      <h1>你让网络升温几度？</h1>
-      <button id="start-btn">开始测量</button>
+    <div id="p-cover" class="page active items-center justify-center p-6 text-center bg-white">
+        <div class="mb-10">
+            <div class="w-24 h-24 bg-blue-500 rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg shadow-blue-200">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">网络文明<br>守护计划</h1>
+            <p class="text-blue-600 mt-4">测测你的网络社交人格</p>
+        </div>
+        <button onclick="nav('p-guide')" class="w-full max-w-xs bg-blue-600 text-white py-4 rounded-full font-bold shadow-lg hover:bg-blue-700 transition">
+            立即开启
+        </button>
     </div>
-  </div>
-</div>
 
-<div id="questionnaire">
-  <div id="bubbles"></div>
-  <div class="thermo-container"><div class="thermo-fill" id="thermo-fill"></div></div>
-
-  <!-- 问题1 -->
-  <div class="question active" data-change="10">
-    <button class="btn-back" onclick="goBack()">←</button>
-    <h2>看到有人被网络暴力时，你会？</h2>
-    <div class="options">
-      <button data-change="-10">A：旁观</button>
-      <button data-change="16.5">B：举报</button>
-      <button data-change="16.5">C：留言安慰</button>
+    <div id="p-guide" class="page items-center justify-center p-8 bg-white">
+        <div class="max-w-md w-full">
+            <h2 class="text-2xl font-bold text-blue-800 mb-6">答题说明</h2>
+            <div class="space-y-4 text-gray-600 leading-relaxed bg-blue-50 p-6 rounded-2xl mb-8">
+                <p>我们将进入 <strong>20个校园网络场景</strong>。</p>
+                <p>请根据你的第一反应做出选择。这不仅是测试，更是一次关于“选择”的实验。</p>
+                <p class="text-sm text-blue-500 mt-4">* 每题只有 1 个最优解，你的选择将决定最终的身份结局。</p>
+            </div>
+            <button onclick="startGame()" class="w-full bg-green-500 text-white py-4 rounded-full font-bold shadow-lg hover:bg-green-600 transition">
+                开始答题
+            </button>
+        </div>
     </div>
-  </div>
 
-  <!-- 问题2 -->
-  <div class="question" data-change="10">
-    <button class="btn-back" onclick="goBack()">←</button>
-    <h2>你在评论区最常用的表情是？</h2>
-    <div class="options">
-      <button data-change="16.5">😊 微笑</button>
-      <button data-change="8">😐 冷静</button>
-      <button data-change="-16.5">😠 生气</button>
+    <div id="p-quiz" class="page bg-slate-50">
+        <div class="bg-white p-4 shadow-sm sticky top-0 z-10">
+            <div class="flex justify-between text-xs text-gray-500 mb-2">
+                <span>进度</span>
+                <span id="progress-text">1/20</span>
+            </div>
+            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-blue-500 transition-all duration-300" style="width: 5%"></div>
+            </div>
+        </div>
+
+        <div class="flex-1 p-6 max-w-md mx-auto w-full overflow-y-auto">
+            <div id="quiz-container" class="fade-in">
+                <span id="q-topic" class="inline-block px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs font-bold mb-4"></span>
+                <h3 id="q-text" class="text-xl font-bold text-gray-900 mb-8 leading-snug"></h3>
+                
+                <div id="options-box" class="space-y-3">
+                    </div>
+                
+                <div id="hint-box" class="hidden mt-6 p-4 bg-yellow-50 border border-yellow-100 rounded-xl">
+                    <div class="flex items-start">
+                        <span class="text-yellow-500 text-xl mr-2">💡</span>
+                        <p id="q-hint" class="text-sm text-gray-600 leading-relaxed pt-1"></p>
+                    </div>
+                    <button onclick="nextQuestion()" class="mt-4 w-full bg-gray-900 text-white py-2 rounded-lg text-sm font-bold">
+                        下一题
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- 问题3 -->
-  <div class="question" data-change="10">
-    <button class="btn-back" onclick="goBack()">←</button>
-    <h2>如果看到不同意见，你会？</h2>
-    <div class="options">
-      <button data-change="-16.5">A：争论</button>
-      <button data-change="16.5">B：理性回复</button>
-      <button data-change="8">C：离开</button>
+    <div id="p-calc" class="page items-center justify-center bg-blue-600 text-white">
+        <div class="text-center">
+            <div class="text-6xl font-bold mb-4" id="final-score-display">0</div>
+            <p class="text-blue-100">正在生成你的网络身份...</p>
+        </div>
     </div>
-  </div>
-</div>
 
-<!-- 结果弹窗 -->
-<div id="result-modal">
-  <div class="modal-content">
-    <h2>你的网络温度是</h2>
-    <div id="temp-value">0°</div>
-    <p>—— 暖心网民 ❤️ ——</p>
-    <button class="btn-generate" id="btn-share">生成分享图</button>
-    <button class="btn-retry" onclick="restart()">再次测量</button>
-  </div>
-</div>
+    <div id="p-result" class="page bg-gray-50 p-6 overflow-y-auto">
+        <div class="max-w-md mx-auto w-full my-auto">
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden mb-6">
+                <div id="res-header" class="h-24 bg-blue-500 flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-black opacity-10"></div>
+                    <h2 id="res-title" class="text-3xl font-bold text-white relative z-10"></h2>
+                </div>
+                
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <span id="res-tag" class="px-3 py-1 rounded-md text-sm font-bold bg-gray-100 text-gray-600"></span>
+                        <span class="text-gray-400 text-sm">得分: <span id="res-score"></span></span>
+                    </div>
+                    
+                    <div class="space-y-4 mb-8">
+                        <p id="res-desc" class="text-gray-600 leading-relaxed text-justify"></p>
+                    </div>
 
-<!-- 分享预览弹窗 -->
-<div id="share-preview">
-  <canvas id="shareCanvas" width="400" height="600" style="border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.5);"></canvas>
-  <button id="downloadBtn">下载图片</button>
-  <button id="closePreview">关闭</button>
-</div>
+                    <div class="bg-gray-50 p-4 rounded-xl text-center mb-6">
+                        <p class="text-xs text-gray-400 mb-1">DESIGN ANALYSIS</p>
+                        <p class="text-sm text-gray-500 font-medium">结局不是评判你，而是提醒你：<br>选择很重要。</p>
+                    </div>
 
-<script>
-const loading=document.getElementById('loading');
-const questionnaire=document.getElementById('questionnaire');
-const thermo=document.getElementById('thermo-fill');
-const questions=document.querySelectorAll('.question');
-const resultModal=document.getElementById('result-modal');
-const tempValue=document.getElementById('temp-value');
-const share=document.getElementById('share');
-const finalTempText=document.getElementById('final-temp-text');
-const bubblesContainer=document.getElementById('bubbles');
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="startGame()" class="bg-white border-2 border-blue-500 text-blue-500 py-3 rounded-xl font-bold hover:bg-blue-50">
+                            再玩一次
+                            <span class="block text-[10px] font-normal opacity-70">换一种选择看看</span>
+                        </button>
+                        <button onclick="alert('请截屏分享给你的朋友！')" class="bg-blue-500 text-white py-3 rounded-xl font-bold hover:bg-blue-600">
+                            分享结果
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-let current=0,temp=50,tempHistory=[temp];
+    <script>
+        // 数据源配置 [cite: 1-106]
+        const quizData = [
+            // 主题一：校园生活中的网络暴力
+            { topic: "校园生活", q: "班级群有人截图嘲笑同学，你应怎么做？", ops: ["转发给更多朋友", "私下劝导并制止", "假装没看见"], ans: 1, hint: "及时制止是减少二次传播最有效的方式，你的态度可能影响整个群的氛围。" },
+            { topic: "校园生活", q: "匿名树洞有人人身攻击某同学，做法是？", ops: ["跟风评论", "及时举报", "截图发给当事人"], ans: 1, hint: "匿名不是免责，平台举报机制是压制恶意帖子的重要手段。" },
+            { topic: "校园生活", q: "同学把别人照片做成表情包，你应？", ops: ["分享出去", "征求当事人意见", "调侃两句"], ans: 1, hint: "肖像权同样适用于网络，对他人照片的使用需要经过同意。" },
+            { topic: "校园生活", q: "发现同学偷拍视频并在群里传播，你会？", ops: ["保存下来", "提醒删除并道歉", "转发讨论"], ans: 1, hint: "未经允许拍摄和传播他人影像，已经构成对隐私的侵犯。" },
+            
+            // 主题二：日常互动中的言语边界
+            { topic: "言语边界", q: "群里有人用“玩笑”贬低某人，你应该？", ops: ["一起笑", "提醒玩笑有边界", "私下安慰受害者"], ans: 1, hint: "轻松氛围不代表可以随意伤害他人，指出边界能提升群体安全感。" },
+            { topic: "言语边界", q: "有人评论同学“成绩差没救了”，你应该？", ops: ["附和", "引导正向鼓励", "让当事人反击"], ans: 1, hint: "评价学习表现时应关注努力，不应给对方贴标签。" },
+            { topic: "言语边界", q: "看到有人因性别群嘲他人，你怎么办？", ops: ["看热闹", "温和指出不当", "骂回去"], ans: 1, hint: "理性表达能促进健康讨论，避免让讨论变成互骂。" },
+            { topic: "言语边界", q: "情绪激动想在网上“发泄”，更应该？", ops: ["直接发", "冷静避免攻击", "指名道姓骂"], ans: 1, hint: "情绪化输出往往是网络暴力的起点。" },
 
-// 点击开始按钮进入问卷
-window.addEventListener('load',()=>{
-  const startBtn = document.getElementById('start-btn');
-  startBtn.addEventListener('click',()=>{
-    loading.classList.add('fade-out');
-    setTimeout(()=>{
-      loading.style.display='none';
-      questionnaire.style.display='block';
-      updateBackButton();
-    },800);
-  });
-});
+            // 主题三：信息传播时的责任意识
+            { topic: "责任意识", q: "有人截取部分聊天记录引导舆论，你认为？", ops: ["截图即事实", "这是误导行为", "有说服力"], ans: 1, hint: "断章取义会改变原意，是网络暴力常见形式之一。" },
+            { topic: "责任意识", q: "面对争议，想发激进观点博关注，应？", ops: ["趁热发声", "谨慎表达", "越极端越好"], ans: 1, hint: "流量不应建立在对他人的伤害之上。" },
+            { topic: "责任意识", q: "有人用情绪语言引导站队，你应？", ops: ["跟随站队", "保持理性", "转发制造对立"], ans: 1, hint: "情绪化传播往往是网络冲突升级的催化剂。" },
+            { topic: "责任意识", q: "转发攻击性内容意味着？", ops: ["不需负责", "承担传播责任", "只是路过"], ans: 1, hint: "每一次转发，都是一次立场选择。" },
 
-// 气泡动画
-function createBubble(){
-  const bubble=document.createElement('div');
-  bubble.className='bubble';
-  const emojiArr=['😊','😐','😠','❤️','👍'];
-  bubble.textContent=emojiArr[Math.floor(Math.random()*emojiArr.length)];
-  bubble.style.left=Math.random()*80+'%';
-  bubble.style.fontSize=(Math.random()*20+20)+'px';
-  bubble.style.animationDuration=(Math.random()*5+4)+'s';
-  bubblesContainer.appendChild(bubble);
-  setTimeout(()=>bubblesContainer.removeChild(bubble),8000);
-}
-let bubbleInterval;
-function startBubbles(){bubbleInterval=setInterval(createBubble,600);}
-function stopBubbles(){if(bubbleInterval) clearInterval(bubbleInterval);}
+            // 主题四：网络暴力时的自我保护
+            { topic: "自我保护", q: "被恶意评论攻击，首先应该？", ops: ["互骂", "截图并举报", "销号逃避"], ans: 1, hint: "留存证据是后续保护自己的重要步骤，同时避免情绪化回应。" },
+            { topic: "自我保护", q: "发现有帖子造谣你，该怎么做？", ops: ["发长文回击", "求助平台/老师", "假装没看见"], ans: 1, hint: "合理寻求第三方介入比单打独斗更有效、更安全。" },
+            { topic: "自我保护", q: "网暴导致情绪低落，最好的做法是？", ops: ["忍着", "与信任者沟通", "网上骂回去"], ans: 1, hint: "及时求助能避免情绪恶化，沟通是最好的缓冲。" },
+            { topic: "自我保护", q: "照片被恶意篡改传播，正确做法是？", ops: ["忍一忍", "取证并处理", "发帖对骂"], ans: 1, hint: "恶意P图可能涉及人格权侵害，需及时处理。" },
 
-// 问题选择
-document.querySelectorAll('.options button').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const change=Number(btn.dataset.change);
-    temp=Math.min(100,Math.max(0,temp+change));
-    thermo.style.height=temp+'%';
-    tempHistory.push(temp);
+            // 主题五：网络友善的倡导者
+            { topic: "友善倡导", q: "看到有人遭网暴，最安全有效的是？", ops: ["评论区大战", "举报并支持", "随便说两句"], ans: 1, hint: "善意行动不等于冲动战斗，理性帮助更能减少伤害。" },
+            { topic: "友善倡导", q: "群友爆料“某老师出事了”，你应该？", ops: ["立刻转发", "核实来源", "二次创作"], ans: 1, hint: "未经核实的信息容易演变为网络暴力的源头。" },
+            { topic: "友善倡导", q: "想带来正能量，你能怎么做？", ops: ["不参与", "转发善意内容", "点赞骂战"], ans: 1, hint: "小小的正向互动，会影响他人对网络环境的感受。" },
+            { topic: "友善倡导", q: "朋友遭网暴倾诉，合适的回应是？", ops: ["别想太多", "理解并鼓励", "建议反击"], ans: 1, hint: "被理解本身，就是对网络暴力的反击。" }
+        ];
 
-    questions[current].classList.remove('active');
-    current++;
-    if(current<questions.length){
-      questions[current].classList.add('active');
-      updateBackButton();
-      if(current===1) startBubbles(); else stopBubbles();
-    } else {
-      stopBubbles();
-      showResult();
-    }
-  });
-});
+        // 结局数据 [cite: 110-149]
+        const results = [
+            { min: 80, title: "网络守护者", tag: "好结局", color: "bg-green-500", desc: "在关键时刻，你选择了理性与善意。面对恶意，你没有沉默，而是及时制止。你的选择减缓了伤害的扩散。网络环境因为你的一次次正确判断，变得更安全了一点。你证明了——普通人，也能成为守护者。" },
+            { min: 60, title: "理性旁观者", tag: "普通结局", color: "bg-blue-500", desc: "你没有参与攻击，但也没有站出来发声。你选择了自保与沉默，避免了直接伤害他人，却也错过了阻止网络暴力的机会。网络世界没有因为你而变坏，但也没有因此变好。" },
+            { min: 40, title: "信息转发者", tag: "警示结局", color: "bg-yellow-500", desc: "你并非出于恶意，但你的转发、调侃或围观，成为了网络暴力扩散的一部分。每一次传播都是新的伤害。网络暴力往往不是从恶开始，而是从一次次忽视开始的。" },
+            { min: 20, title: "言语失控者", tag: "坏结局", color: "bg-orange-500", desc: "你用情绪代替了判断。嘲讽、攻击、跟风评论，让网络世界变得更加尖锐。你的话语，可能已经在无形中伤害了他人。网络并非没有代价，每一次恶意输出，都会留下痕迹。" },
+            { min: 0, title: "暴力扩散源", tag: "最坏结局", color: "bg-red-500", desc: "你多次选择了攻击、传播和放大恶意。一条评论、一张截图、一句谣言，被不断扩散，最终演变成无法控制的网络暴力。现实中的伤害已经发生，而网络的“看不见”，并不意味着无需承担后果。" }
+        ];
 
-function goBack(){
-  if(current===0)return;
-  questions[current].classList.remove('active');
-  current--;
-  questions[current].classList.add('active');
-  tempHistory.pop();
-  temp=tempHistory[tempHistory.length-1]||50;
-  thermo.style.height=temp+'%';
-  updateBackButton();
-  if(current===1) startBubbles(); else stopBubbles();
-}
+        let currIndex = 0;
+        let score = 0;
+        let isAnswering = true; // 状态锁，防止连点
 
-function updateBackButton(){
-  questions.forEach((q,i)=>{
-    const btn=q.querySelector('.btn-back');
-    if(btn) btn.style.display=(i>0&&i===current)?'block':'none';
-  });
-}
+        function nav(pageId) {
+            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0,0);
+        }
 
-// 显示结果弹窗
-function showResult(){
-  questionnaire.style.display='block';
-  resultModal.style.display='flex';
-  let displayTemp=0;
-  const finalTemp=Math.round(temp);
-  const timer=setInterval(()=>{
-    if(displayTemp<finalTemp){
-      displayTemp++;
-      tempValue.textContent=displayTemp+'°';
-    } else clearInterval(timer);
-  },30);
-  //finalTempText.textContent=`我的网络温度为 ${finalTemp}°`;
-}
+        function startGame() {
+            currIndex = 0;
+            score = 0;
+            renderQuestion();
+            nav('p-quiz');
+        }
 
-// 生成分享图预览
-document.getElementById('btn-share').onclick = async () => {
-  resultModal.style.display = 'none';
+        function renderQuestion() {
+            if (currIndex >= quizData.length) {
+                finishQuiz();
+                return;
+            }
+            
+            const q = quizData[currIndex];
+            isAnswering = true;
 
-  const bg = await loadImage('image/share.jpg');
-  const qr = await loadImage('image/qrcode.jpg');
-  const canvas = document.getElementById('shareCanvas');
-  canvas.width = 300;
-  canvas.height = 450;
-  const ctx = canvas.getContext('2d');
+            // 更新UI
+            document.getElementById('progress-text').innerText = `${currIndex + 1}/${quizData.length}`;
+            document.getElementById('progress-bar').style.width = `${((currIndex + 1) / quizData.length) * 100}%`;
+            document.getElementById('q-topic').innerText = q.topic;
+            document.getElementById('q-text').innerText = `${currIndex + 1}. ${q.q}`;
+            document.getElementById('hint-box').classList.add('hidden');
+            
+            // 生成选项
+            const opsBox = document.getElementById('options-box');
+            opsBox.innerHTML = '';
+            q.ops.forEach((op, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-card bg-white p-4 rounded-xl shadow-sm cursor-pointer flex items-center';
+                btn.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 font-bold flex items-center justify-center mr-3 shrink-0">${String.fromCharCode(65+idx)}</div>
+                    <span class="text-sm font-medium">${op}</span>
+                `;
+                btn.onclick = () => checkAnswer(idx, btn);
+                opsBox.appendChild(btn);
+            });
+            
+            // 重置动画
+            const container = document.getElementById('quiz-container');
+            container.classList.remove('fade-in');
+            void container.offsetWidth; // trigger reflow
+            container.classList.add('fade-in');
+        }
 
-  // 背景
-  ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-  ctx.fillStyle='#fff';
-  ctx.font='24px "微软雅黑"';
-  ctx.textAlign='center';
-  ctx.fillText('我为网络升温1°', canvas.width/2, 200);
-  ctx.fillStyle='#ffdb4d';
-  ctx.font='bold 30px "微软雅黑"';
-  ctx.fillText(`我的网络温度：${Math.round(temp)}°`, canvas.width/2, 260);
-  const qrSize=80;
-  ctx.drawImage(qr, canvas.width/2-qrSize/2 - 85, canvas.height-qrSize-15, qrSize, qrSize);
-  ctx.fillStyle='#999999';
-  ctx.font='16px "微软雅黑"';
-  ctx.fillText('扫码测测你的网络温度', canvas.width/2+55, canvas.height-15);
+        function checkAnswer(selectedIdx, btnEl) {
+            if (!isAnswering) return;
+            isAnswering = false;
 
-  //document.getElementById('share-preview').style.display='flex';
+            const q = quizData[currIndex];
+            const isCorrect = selectedIdx === q.ans;
+            
+            // 样式反馈
+            if (isCorrect) {
+                score += 5;
+                btnEl.classList.add('bg-green-50', 'border-green-400');
+                btnEl.querySelector('div').classList.add('bg-green-500', 'text-white');
+            } else {
+                btnEl.classList.add('bg-red-50', 'border-red-200');
+                btnEl.querySelector('div').classList.add('bg-red-500', 'text-white');
+            }
 
-  const sharePreview = document.getElementById('share-preview');
-  sharePreview.style.opacity = '0';
-  sharePreview.style.display = 'flex';
-  
-  // 触发动画
-  setTimeout(() => {
-    sharePreview.style.transition = 'opacity 0.5s ease-in-out';
-    sharePreview.style.opacity = '1';
-  }, 10);
-};
+            // 显示提示
+            document.getElementById('q-hint').innerText = q.hint;
+            document.getElementById('hint-box').classList.remove('hidden');
+            
+            // 自动滚动到底部以便看到提示
+            setTimeout(() => {
+                document.getElementById('p-quiz').scrollTo({ top: 1000, behavior: 'smooth' });
+            }, 100);
+        }
 
-function loadImage(src){
-  return new Promise((resolve,reject)=>{
-    const img=new Image();
-    img.crossOrigin="anonymous";
-    img.onload=()=>resolve(img);
-    img.onerror=reject;
-    img.src=src;
-  });
-}
+        function nextQuestion() {
+            currIndex++;
+            renderQuestion();
+            document.getElementById('p-quiz').scrollTo(0,0);
+        }
 
-document.getElementById('downloadBtn').onclick=()=>{
-  const canvas=document.getElementById('shareCanvas');
-  const link=document.createElement('a');
-  link.download='我的网络温度分享图.jpg';
-  link.href=canvas.toDataURL('image/jpeg');
-  link.click();
-};
+        function finishQuiz() {
+            nav('p-calc');
+            // 跑分动画
+            let dScore = 0;
+            const timer = setInterval(() => {
+                if (dScore >= score) {
+                    clearInterval(timer);
+                    setTimeout(showResult, 800);
+                } else {
+                    dScore++;
+                    document.getElementById('final-score-display').innerText = dScore;
+                }
+            }, 20);
+        }
 
-document.getElementById('closePreview').onclick=()=>{
-  document.getElementById('share-preview').style.display='none';
-  resultModal.style.display='flex'; // 显示结果弹窗
-};
-
-// 重启
-function restart(){
-  stopBubbles();
-  if (share) share.style.display='none';  // 添加检查
-  resultModal.style.display='none';
-  questionnaire.style.display='block';
-  current=0;
-  temp=50;
-  tempHistory=[temp];
-  thermo.style.height=temp+'%';
-  questions.forEach((q,i)=>q.classList.toggle('active',i===0));
-  updateBackButton();
-}
-</script>
+        function showResult() {
+            // 查找对应结局
+            const res = results.find(r => score >= r.min) || results[results.length-1];
+            
+            document.getElementById('res-header').className = `h-24 flex items-center justify-center relative overflow-hidden ${res.color}`;
+            document.getElementById('res-title').innerText = res.title;
+            document.getElementById('res-tag').innerText = res.tag;
+            document.getElementById('res-score').innerText = score;
+            document.getElementById('res-desc').innerText = res.desc;
+            
+            nav('p-result');
+        }
+    </script>
 </body>
 </html>
